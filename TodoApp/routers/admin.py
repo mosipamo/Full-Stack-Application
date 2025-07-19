@@ -4,7 +4,6 @@ from database import SessionLocal
 from typing import Annotated
 from sqlalchemy.orm import Session
 from starlette import status
-from pydantic import BaseModel, Field
 from .auth import get_current_user
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -37,5 +36,3 @@ async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = P
 
     db.query(models.Todos).filter(models.Todos.id == todo_id).delete()
     db.commit()
-
-    return {"detail": "Todo deleted successfully"}
