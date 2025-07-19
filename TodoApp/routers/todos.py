@@ -5,6 +5,7 @@ from typing import Annotated
 from sqlalchemy.orm import Session
 from starlette import status
 from pydantic import BaseModel, Field
+from .auth import get_current_user
 
 router = APIRouter(tags=["Todos"])
 
@@ -15,8 +16,6 @@ def get_db():
     finally:
         db.close()
 
-db_dependency = Annotated[Session, Depends(get_db)]
-
 class TodoRequest(BaseModel):
     title: str = Field(min_length=3)
     description: str = Field(min_length=3, max_length=100)
@@ -24,29 +23,46 @@ class TodoRequest(BaseModel):
     is_complete: bool = Field()
 
 
-@router.get("/")
-async def read_all_records_in_db(db: db_dependency, status_code=status.HTTP_200_OK):
-    return db.query(models.Todos).all()
+db_dependency = Annotated[Session, Depends(get_db)]
+user_dependency = Annotated[dict, Depends(get_current_user)]
+
+
+@router.get("/", status_code=status.HTTP_200_OK)
+async def read_all_records_in_db(user: user_dependency, db: db_dependency):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+    return db.query(models.Todos).filter(user.get("id") == models.Todos.owner_id).all()
 
 
 @router.get("/todo/{todo_id}", status_code=status.HTTP_200_OK)
-async def get_todo_by_id(db: db_dependency, todo_id: int = Path(ge=0)):
-    result = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+async def get_todo_by_id(user: user_dependency, db: db_dependency, todo_id: int = Path(ge=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    result = db.query(models.Todos).filter(models.Todos.id == todo_id) \
+                                   .filter(user.get("id") == models.Todos.id).first()
     if result: 
         return result
     raise HTTPException(status_code=404, detail="Todo not found")
 
 
 @router.post("/todo", status_code=status.HTTP_200_OK)
-async def create_todo(db: db_dependency, todo: TodoRequest):
-    result = models.Todos(**todo.model_dump())
+async def create_todo(user: user_dependency, db: db_dependency, todo: TodoRequest):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
+    result = models.Todos(**todo.model_dump(), owner_id=user.get("id"))
 
     db.add(result)
     db.commit()
 
-@router.put("/todo/{todo_id}")
-async def update_todo(db: db_dependency, todo: TodoRequest, todo_id: int = Path(gt=0)):
-    result = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+@router.put("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def update_todo(user: user_dependency, db: db_dependency, todo: TodoRequest, todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+    
+    result = db.query(models.Todos).filter(models.Todos.id == todo_id) \
+                    .filter(user.get("id") == models.Todos.owner_id).first()
     if not result:
         raise HTTPException(status_code=404, detail="Todo not found")
 
@@ -61,11 +77,16 @@ async def update_todo(db: db_dependency, todo: TodoRequest, todo_id: int = Path(
     db.commit()
 
 
-@router.delete("/todo/{todo_id}", status_code=status.HTTP_200_OK)
-async def delete_todo(db: db_dependency, todo_id: int = Path(gt=0)):
-    result = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+@router.delete("/todo/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(user: user_dependency, db: db_dependency, todo_id: int = Path(gt=0)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+    
+    result = db.query(models.Todos).filter(models.Todos.id == todo_id) \
+                    .filter(user.get("id") == models.Todos.owner_id).first()
     if not result:
         raise HTTPException(status_code=404, detail="Todo not found")
-    db.query(models.Todos).filter(models.Todos.id == todo_id).delete()
+    db.query(models.Todos).filter(models.Todos.id == todo_id) \
+                            .filter(user.get("id") == models.Todos.owner_id).delete()
 
     db.commit()
