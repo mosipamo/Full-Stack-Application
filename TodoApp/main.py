@@ -7,5 +7,5 @@ app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine) # modes for database: column, box, markdown, table
 
-app.include_router(auth.router, tags=["Authentication"])
-app.include_router(todos.router, tags=["Todos"])
+app.include_router(auth.router)
+app.include_router(todos.router)
