@@ -26,7 +26,7 @@ class PasswordChangeRequest(BaseModel):
     password: str
     new_password: str = Field(min_length=6)
 
-@router.get("/profile", status_code=status.HTTP_200_OK)
+@router.get("/", status_code=status.HTTP_200_OK)
 async def get_user_profile(user: user_dependency, db: db_dependency):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication failed")
@@ -41,7 +41,7 @@ async def get_user_profile(user: user_dependency, db: db_dependency):
 
     return user_profile
 
-@router.put("/profile", status_code=status.HTTP_204_NO_CONTENT)
+@router.put("/password", status_code=status.HTTP_204_NO_CONTENT)
 async def change_password(user: user_dependency, db: db_dependency, new_password: PasswordChangeRequest):
     if user is None:
         raise HTTPException(status_code=401, detail="Authentication failed")
@@ -58,5 +58,24 @@ async def change_password(user: user_dependency, db: db_dependency, new_password
         raise HTTPException(status_code=400, detail="Incorrect password")
 
     user_profile.hashed_password = bcrypt_context.hash(new_password.new_password)
+    db.add(user_profile)
+    db.commit()
+
+
+
+@router.put("/change_password/{phone_number}", status_code=status.HTTP_204_NO_CONTENT)
+async def change_password_for_user(db: db_dependency, user: user_dependency, phone_number: str):
+    if user is None:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+    
+    user_id = user.get("id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID not found in token")
+    
+    user_profile = db.query(models.Users).filter(models.Users.id == user_id).first()
+    if not user_profile:
+        raise HTTPException(status_code=400, detail="Incorret phone_number")
+    
+    user_profile.phone_number = phone_number
     db.add(user_profile)
     db.commit()
