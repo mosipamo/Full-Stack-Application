@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from models import Users
+from ..models import Users
 from starlette import status
 from passlib.context import CryptContext
-from database import SessionLocal
+from ..database import SessionLocal
 from typing import Annotated
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
@@ -64,12 +64,12 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         role: str = payload.get("role")
         if username is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
-                                detail="Could not validate user")
+                                detail="Could not validate user.")
         return {"username": username, "id": user_id, "role": role}
     
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
-                            detail="Could not validate user")
+                            detail="Could not validate user.")
 
         
 @router.post("/", status_code=status.HTTP_201_CREATED)

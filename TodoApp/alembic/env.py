@@ -1,10 +1,23 @@
+import os
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+print("Project root:")
+print(f"Project root: {project_root}")
+sys.path.append(project_root)
+
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-import models
+import TodoApp.models
+from TodoApp.database import Base
+
+
+# Get the absolute path to the '03-project' directory (your project root)
+# Assumes env.py is in TodoApp/alembic/
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -19,7 +32,7 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = models.Base.metadata
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
