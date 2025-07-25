@@ -7,7 +7,10 @@ from starlette import status
 from pydantic import BaseModel, Field
 from .auth import get_current_user
 
-router = APIRouter(tags=["Todos"])
+router = APIRouter(
+    prefix="/todos", 
+    tags=["Todos"]
+)
 
 def get_db():
     db = SessionLocal()
