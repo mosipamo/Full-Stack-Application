@@ -23,7 +23,7 @@
                 </thead>
                 <tbody>
                 {% for todo in todos %}
-                {% if todo.complete == False %}
+                {% if todo.is_complete == False %}
                 <tr class="pointer">
                     <td>{{loop.index}}</td>
                     <td>{{todo.title}}</td>
