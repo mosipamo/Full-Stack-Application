@@ -80,7 +80,7 @@ async def render_add_todo_page(request: Request):
         return templates.TemplateResponse("add-todo.html", {"request": request, "user": user})
     
     except:
-        pass
+        return redirect_to_login()
 
 ### endpoints ###
 @router.get("/", status_code=status.HTTP_200_OK)
