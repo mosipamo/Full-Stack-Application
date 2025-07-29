@@ -31,7 +31,6 @@ Full-Stack-Application-main/
 │   │   ├── users.py              # User endpoints
 │   │   └── todos.py              # Todo logic
 │   ├── static/css/               # Stylesheets
-│   │   └── base.css
 │   ├── templates/                # HTML templates
 │   ├── alembic/                  # Alembic migration scripts
 │   │   └── versions/
@@ -68,7 +67,7 @@ alembic upgrade head
 5. **Run the FastAPI server:**
 
 ```bash
-uvicorn main:app --reload
+uvicorn TodoApp.main:app --reload
 ```
 
 6. **Visit the app:**
