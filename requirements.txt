@@ -1,2 +1,10 @@
 fastapi 
- uvicorn
+uvicorn
+sqlalchemy
+alembic
+jinja2
+python-multipart
+passlib[bcrypt]
+anyio
+pytest
+python-jose
