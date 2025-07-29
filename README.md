@@ -24,7 +24,7 @@ Full-Stack-Application-main/
 │   ├── database.py               # DB connection
 │   ├── models.py                 # ORM models
 │   ├── alembic.ini               # Alembic config
-│   ├── todosapp.db               # SQLite DB
+│   ├── todosapp.db               # SQLite DB / I use PostgreSQL in this project
 │   ├── routers/                  # Route definitions
 │   │   ├── auth.py               # Auth routes
 │   │   ├── admin.py              # Admin functionality
@@ -88,7 +88,7 @@ FastAPI provides a built-in, interactive **Swagger UI** at `/docs`, where you ca
 
 - **FastAPI**
 - **Jinja2 Templates**
-- **SQLite + SQLAlchemy**
+- **SQLite/PostgreSQL + SQLAlchemy**
 - **Alembic** (DB migrations)
 - **HTML, CSS, Bootstrap**
 - **Uvicorn** (ASGI server)
