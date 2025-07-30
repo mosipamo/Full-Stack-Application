@@ -41,7 +41,7 @@ Full-Stack-Application-main/
 1. **Clone the repository:**
 
 ```bash
-git clone https://github.com/your-username/Full-Stack-Application.git
+git clone https://github.com/mosipamo/Full-Stack-Application.git
 cd Full-Stack-Application/TodoApp
 ```
 
