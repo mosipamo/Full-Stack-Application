@@ -67,6 +67,7 @@ alembic upgrade head
 5. **Run the FastAPI server:**
 
 ```bash
+cd ..
 uvicorn TodoApp.main:app --reload
 ```
 
