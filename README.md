@@ -48,8 +48,8 @@ cd Full-Stack-Application/TodoApp
 2. **Create a virtual environment and activate it:**
 
 ```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate.bat`
+python -m venv env
+source env/bin/activate  # On Windows use `env\Scripts\activate.bat`
 ```
 
 3. **Install dependencies:**
