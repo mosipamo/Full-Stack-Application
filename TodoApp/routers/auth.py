@@ -11,16 +11,14 @@ from jose import jwt, JWTError
 from datetime import timedelta, datetime, timezone
 from fastapi.templating import Jinja2Templates
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["Authentication"]
-)
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 SECRET_KEY = "2290cdf1724c4a08600e00f7ef86010f3b9acd62a4f34d59da3c6bdb46a5771c"
 ALGORITHM = "HS256"
+
 
 class CreateUserRequest(BaseModel):
     username: str
@@ -36,6 +34,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -43,19 +42,21 @@ def get_db():
     finally:
         db.close()
 
+
 db_dependency = Annotated[Session, Depends(get_db)]
 
 templates = Jinja2Templates(directory="TodoApp/templates")
 
+
 ### Pages ###
 @router.get("/login-page")
-def render_login_page(request: Request):    
-    return templates.TemplateResponse("login.html", context={"request": request})
+def render_login_page(request: Request):
+    return templates.TemplateResponse(request, "login.html")
+
 
 @router.get("/register-page")
 def render_login_page(request: Request):
-    return templates.TemplateResponse("register.html", context={"request": request})
-
+    return templates.TemplateResponse(request, "register.html")
 
 
 ### Endpoints ###
@@ -67,12 +68,16 @@ def authenticate_user(db: Session, username: str, password: str):
         return False
     return user
 
-def create_access_token(username: str, user_id: int, role: str, expires_delta: timedelta | None = None):
+
+def create_access_token(
+    username: str, user_id: int, role: str, expires_delta: timedelta | None = None
+):
     to_encode = {"sub": username, "id": user_id, "role": role}
     expires = datetime.now(timezone.utc) + expires_delta
     to_encode.update({"exp": expires})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
     try:
@@ -81,42 +86,52 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         user_id: int = payload.get("id")
         role: str = payload.get("role")
         if username is None or user_id is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
-                                detail="Could not validate user.")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate user.",
+            )
         return {"username": username, "id": user_id, "role": role}
-    
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
-                            detail="Could not validate user.")
 
-        
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user."
+        )
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: CreateUserRequest):
-    """Create a new user in the system. """
+    """Create a new user in the system."""
     create_user_model = Users(
-        email = create_user_request.email,
-        username = create_user_request.username,
-        first_name = create_user_request.first_name,
-        last_name = create_user_request.last_name,
-        hashed_password = bcrypt_context.hash(create_user_request.password),
-        role = create_user_request.role,
-        is_active = True,
-        phone_number = create_user_request.phone_number
+        email=create_user_request.email,
+        username=create_user_request.username,
+        first_name=create_user_request.first_name,
+        last_name=create_user_request.last_name,
+        hashed_password=bcrypt_context.hash(create_user_request.password),
+        role=create_user_request.role,
+        is_active=True,
+        phone_number=create_user_request.phone_number,
     )
 
     db.add(create_user_model)
     db.commit()
-    
+
     return create_user_model
 
 
 @router.post("/token", status_code=status.HTTP_200_OK, response_model=Token)
-async def login_fot_access_token(db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+async def login_fot_access_token(
+    db: db_dependency, form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
+):
     """Authenticate user and return access"""
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
-        return "Failed Authentication"
-    
-    token = create_access_token(user.username, user.id, user.role, expires_delta=timedelta(minutes=30))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password.",
+        )
+
+    token = create_access_token(
+        user.username, user.id, user.role, expires_delta=timedelta(minutes=30)
+    )
 
     return {"access_token": token, "token_type": "bearer"}
